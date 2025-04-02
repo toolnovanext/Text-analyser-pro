@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Analyzer Pro</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --border-radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        .dark-mode {
+            --primary-color: #ecf0f1;
+            --secondary-color: #3498db;
+            --bg-color: #2c3e50;
+            --text-color: #ecf0f1;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: var(--transition);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        h1 {
+            color: var(--secondary-color);
+            font-size: 2rem;
+        }
+
+        .mode-toggle {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .mode-toggle:hover {
+            opacity: 0.9;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 1rem;
+            border: 2px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            resize: vertical;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+
+        .buttons-container {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .action-btn {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+
+        .word-frequency {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: var(--primary-color);
+            border-radius: var(--border-radius);
+        }
+
+        .frequency-list {
+            list-style: none;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 0 0.5rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Text Analyzer</h1>
+            <button class="mode-toggle" onclick="toggleDarkMode()">Dark Mode</button>
+        </div>
+        
+        <textarea id="text-input" placeholder="Start typing or paste your text here..."></textarea>
+        
+        <div class="stats-grid" id="stats-container">
+            <div class="stat-card">
+                <div>Words</div>
+                <div class="stat-value" id="word-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Characters</div>
+                <div class="stat-value" id="char-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Paragraphs</div>
+                <div class="stat-value" id="para-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Lines</div>
+                <div class="stat-value" id="line-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Numbers</div>
+                <div class="stat-value" id="num-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div>Special Chars</div>
+                <div class="stat-value" id="special-count">0</div>
+            </div>
+        </div>
+
+        <div class="buttons-container">
+            <button class="action-btn" onclick="copyToClipboard()">Copy Results</button>
+            <button class="action-btn" onclick="downloadReport()">Download Report</button>
+        </div>
+
+        <div class="word-frequency" id="word-frequency">
+            <h3>Most Frequent Words</h3>
+            <ul class="frequency-list" id="frequency-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        const textInput = document.getElementById('text-input');
+        const stats = {
+            wordCount: document.getElementById('word-count'),
+            charCount: document.getElementById('char-count'),
+            paraCount: document.getElementById('para-count'),
+            lineCount: document.getElementById('line-count'),
+            numCount: document.getElementById('num-count'),
+            specialCount: document.getElementById('special-count')
+        };
+
+        textInput.addEventListener('input', analyzeText);
+
+        function analyzeText() {
+            const text = textInput.value;
+            
+            // Basic stats
+            stats.charCount.textContent = text.length;
+            stats.wordCount.textContent = text.trim().split(/\s+/).filter(word => word).length;
+            stats.paraCount.textContent = text.split('\n\n').filter(para => para.trim()).length;
+            stats.lineCount.textContent = text.split('\n').filter(line => line.trim()).length;
+            
+            // Numbers and special characters
+            stats.numCount.textContent = (text.match(/\d/g) || []).length;
+            stats.specialCount.textContent = (text.match(/[^\w\s]/g) || []).length;
+
+            updateWordFrequency(text);
+        }
+
+        function updateWordFrequency(text) {
+            const words = text.toLowerCase().match(/\b\w+\b/g) || [];
+            const frequency = {};
+            
+            words.forEach(word => {
+                frequency[word] = (frequency[word] || 0) + 1;
+            });
+
+            const sortedWords = Object.entries(frequency)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+
+            const frequencyList = document.getElementById('frequency-list');
+            frequencyList.innerHTML = sortedWords
+                .map(([word, count]) => `
+                    <li>${word}: ${count}</li>
+                `).join('');
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const btn = document.querySelector('.mode-toggle');
+            btn.textContent = document.body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';
+        }
+
+        function copyToClipboard() {
+            const text = `Text Analysis Report:\n` +
+                `Words: ${stats.wordCount.textContent}\n` +
+                `Characters: ${stats.charCount.textContent}\n` +
+                `Paragraphs: ${stats.paraCount.textContent}\n` +
+                `Lines: ${stats.lineCount.textContent}\n` +
+                `Numbers: ${stats.numCount.textContent}\n` +
+                `Special Characters: ${stats.specialCount.textContent}`;
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Results copied to clipboard!');
+            });
+        }
+
+        function downloadReport() {
+            const text = `Text Analysis Report:\n\n` +
+                `Words: ${stats.wordCount.textContent}\n` +
+                `Characters: ${stats.charCount.textContent}\n` +
+                `Paragraphs: ${stats.paraCount.textContent}\n` +
+                `Lines: ${stats.lineCount.textContent}\n` +
+                `Numbers: ${stats.numCount.textContent}\n` +
+                `Special Characters: ${stats.specialCount.textContent}\n\n` +
+                `Most Frequent Words:\n${document.getElementById('frequency-list').innerText}`;
+
+            const blob = new Blob([text], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'text-analysis-report.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initial analysis
+        analyzeText();
+    </script>
+</body>
+</html>
